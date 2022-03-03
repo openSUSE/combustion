@@ -64,6 +64,14 @@ exchangedir="/dev/shm/combustion/"
 delete_resolv_conf=0
 
 cleanup() {
+	local exitcode=$?
+
+	# If combustion failed, print output to the console(s)
+	if [ $exitcode != 0 ]; then
+		# -u also prints messages like "Triggering OnFailure= dependencies"
+		journalctl --no-pager -o cat _SYSTEMD_UNIT=combustion.service >/dev/console
+	fi
+
 	if findmnt "${config_mount}" >/dev/null; then
 		umount "${config_mount}" || true
 		rmdir "${config_mount}" || true
