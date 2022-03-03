@@ -19,12 +19,14 @@ The configuration files are copied from a filesystem with the LABEL
 It expects a directory "combustion" at the root level of the filesystem and
 a file "script" inside, which is executed inside a transactional-update shell.
 
+```
  <root directory>
  ├── combustion
  │   ├── script
  │   └── ... other files
  └── ignition (optional)
      └── config.ign
+```
 
 If a QEMU fw_cfg blob with the name "opt/org.opensuse.combustion/script" is
 found, it is preferred and the content of that is used as script.
@@ -41,7 +43,7 @@ Simple example
 Example for formatting a USB drive and adding a config, which installs the
 "vim-small" package and creates a /root/welcome file:
 
-```
+```bash
 mkfs.ext4 /dev/sdX
 e2label /dev/sdX ignition
 mount /dev/sdX /mnt
@@ -69,7 +71,7 @@ More complex configuration example
 This script additionally provides visible feedback during boot, sets a password
 and copies a public ssh key (which has to be in the "combustion" folder).
 
-```
+```bash
 #!/bin/bash
 # combustion: network
 # Redirect output to the console
@@ -90,7 +92,7 @@ How it works
 ------------
 
 The ignition-dracut-grub2 package created a flag file which tells GRUB 2 that
-it's the first boot of the system and so GRUB adds "ignition.firstboot" to the
+it's the first boot of the system and so GRUB adds ignition.firstboot to the
 kernel commandline.
 
 If this option is found on the kernel cmdline, combustion.service's
