@@ -160,6 +160,8 @@ if [ -x /sysroot/usr/sbin/transactional-update ]; then
 		chmod a+x script
 		./script
 		echo \$? > "${exchangedir}/retval"
+		# Snapshot got touched while the policy isn't active, needs relabeling again.
+		[ -e /etc/selinux/.relabelled ] && >> /etc/selinux/.autorelabel
 EOF
 		echo "transactional-update failed"
 		exit 1
@@ -170,9 +172,6 @@ EOF
 		chroot /sysroot transactional-update --no-selfupdate rollback
 		exit 1
 	fi
-
-	# Snapshot got touched while the policy isn't active, needs relabeling again.
-	[ -e /sysroot/etc/selinux/.relabelled ] && >> /sysroot/etc/selinux/.autorelabel
 else
 	mount -o remount,rw /sysroot
 	if ! chroot /sysroot sh -e -c "cd '${config_dir}'; chmod a+x script; ./script"; then
