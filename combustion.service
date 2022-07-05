@@ -33,3 +33,6 @@ OnFailureJobMode=isolate
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/combustion
+
+[Install]
+RequiredBy=initrd.target
