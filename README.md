@@ -10,6 +10,12 @@ shell script, loaded from an external storage media and is run during boot in a
 new system snapshot. On success, the system will directly boot into that new
 snapshot, so that no reboot is needed.
 
+Installation
+------------
+
+Run `make install` to install it manually. Usually combustion is packaged up
+and installed during image builds already.
+
 How to use it
 -------------
 
