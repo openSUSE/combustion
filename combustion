@@ -110,6 +110,11 @@ fi
 # Make sure /sysroot is mounted
 systemctl start sysroot.mount
 
+# Same for /sysroot/usr if it exists (e.g. through mount.usr)
+if systemctl cat sysroot-usr.mount &>/dev/null; then
+	systemctl start sysroot-usr.mount
+fi
+
 # Copy config
 mkdir "${exchangedir}"
 config_dir="${exchangedir}/config"
