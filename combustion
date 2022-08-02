@@ -58,7 +58,7 @@ if [ "${1-}" = "--prepare" ]; then
 				udevadm trigger --subsystem-match net --action add
 			else
 				# NetworkManager
-				. /usr/lib/dracut/hooks/cmdline/99-nm-config.sh
+				. /lib/dracut/hooks/cmdline/99-nm-config.sh
 			fi
 EOF
 	fi
