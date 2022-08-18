@@ -129,8 +129,11 @@ fi
 awk '$4 ~ /x-initrd.mount/ { system("findmnt /sysroot" $2 " >/dev/null || mount -t " $3 " -o " $4 " " $1 " /sysroot" $2) }' /sysroot/etc/fstab
 
 # Make sure the old snapshot is relabeled too, otherwise syncing its /etc fails.
-if [ -e /sysroot/etc/selinux/.autorelabel ]; then
+if [ -e /lib/dracut/hooks/pre-pivot/50-selinux-microos-relabel.sh ]; then
 	NEWROOT=/sysroot bash -c '. /lib/dracut-lib.sh; . /lib/dracut/hooks/pre-pivot/50-selinux-microos-relabel.sh'
+elif [ -e /sysroot/.autorelabel ] || [ -e /sysroot/etc/selinux/.autorelabel ]; then
+	echo "Relabel (probably) needed, but selinux-microos-relabel not found."
+	exit 1
 fi
 
 # Prepare chroot
