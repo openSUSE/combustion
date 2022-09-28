@@ -50,6 +50,19 @@ if [ "${1-}" = "--prepare" ]; then
                 config_drive_found=1
 	done
 
+  # Check if a directory was dropped in the /sysroot
+	for label in combustion COMBUSTION ignition IGNITION; do
+		[ "${config_drive_found}" = "1" ] && break
+		[ -e "/sysroot/${label}" ] || continue
+
+		if ! mount -o bind /$sysroot/{label} "${config_mount}"; then
+			echo "Failed to bind mount existing config"
+			exit 1
+		fi
+
+                config_drive_found=1
+	done
+
 	if [ "${config_drive_found}" = "0" ]; then
 		echo "No config drive found"
 		exit 0
