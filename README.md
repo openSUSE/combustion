@@ -97,9 +97,9 @@ echo "Configured with combustion" > /etc/issue.d/combustion
 How it works
 ------------
 
-The ignition-dracut-grub2 package created a flag file which tells GRUB 2 that
-it's the first boot of the system and so GRUB adds ignition.firstboot to the
-kernel commandline.
+The ignition-dracut-grub2 package contains a GRUB2 config snippet which adds
+`ignition.firstboot` to the kernel commandline unless the
+`/boot/writable/firstboot_happened` flag file exists.
 
 If this option is found on the kernel cmdline, combustion.service's
 ConditionKernelCommandLine is fulfilled and it'll be required by initrd.target.
@@ -119,5 +119,6 @@ in a warning.
 /sysroot is unmounted and mounted again, so that the default subvolume gets
 reevaluated and directly booted into.
 
-The ignition-firstboot-complete service in the final system runs, which deletes
-the flag file. This means that combustion is not run on subsequent boots.
+The ignition-firstboot-complete service in the final system runs, which creates
+the firstboot_happened flag file. Thus combustion does not run on subsequent
+boots.
