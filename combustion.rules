@@ -10,7 +10,9 @@
 
 # Filesystems with either combustion or ignition as label
 ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="combustion", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="COMBUSTION", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
 ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="ignition", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="IGNITION", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
 # QEMU fw_cfg blob with key opt/org.opensuse.combustion
 ACTION=="add", SUBSYSTEM=="opt", ENV{DEVPATH}=="/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config", TAG+="systemd"
 
