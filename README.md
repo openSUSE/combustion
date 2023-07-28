@@ -105,8 +105,10 @@ The ignition-dracut-grub2 package contains a GRUB2 config snippet which adds
 If this option is found on the kernel cmdline, combustion.service's
 ConditionKernelCommandLine is fulfilled and it'll be required by initrd.target.
 This pulls in combustion-prepare.service, which runs after the config drive or
-QEMU fw_cfg blob appears (see combustion.rules for details). It is read and if
-the "network" flag comment is present, enables networking for later.
+QEMU fw_cfg blob appears (see combustion.rules for details). The combustion
+configuration is copied from the config source into /dev/shm/combustion/config
+(this is accessible in `transactional-update shell` later).
+If the `network` flag is present, networking is enabled in the initrd.
 After /sysroot is mounted and network is up (if enabled), combustion.service
 runs, which tries to activate all mountpoints in the system's /etc/fstab and
 then calls transactional-update in a chroot.
