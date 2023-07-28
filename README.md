@@ -22,6 +22,7 @@ How to use it
 The configuration files are copied from a filesystem with the LABEL
 "combustion", but to be compatible and co-installable with ignition
 (https://github.com/coreos/ignition), the LABEL "ignition" is used as fallback.
+All-uppercase labels are accepted as well.
 It expects a directory "combustion" at the root level of the filesystem and
 a file "script" inside, which is executed inside a transactional-update shell.
 
@@ -65,7 +66,7 @@ echo "Hello User!" >/mnt/combustion/welcome
 umount /mnt
 ```
 
-The "# combustion: network" comment triggers networking initialization before
+The `# combustion: network` comment triggers networking initialization before
 running the script. This is equivalent to passing "rd.neednet=1" on the kernel
 cmdline and so the network configuration parameters (man dracut.cmdline) apply
 here as well. If those aren't specified, it defaults to "ip=dhcp" for each
