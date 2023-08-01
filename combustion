@@ -113,6 +113,14 @@ cleanup() {
 # This is needed as ignition-mount.service's ExecStop is also disabled unconditionally.
 trap cleanup EXIT
 
+# Compatibility for ignition-kargs-helper, which drops a script into
+# "/run/combustion/mount/combustion" and then calls combustion
+if [ -d "${config_mount}/combustion" ]; then
+	rm -rf "${config_dir}"
+	cp -R "${config_mount}/combustion" "${config_dir}"
+	chmod a+x "${config_dir}/script"
+fi
+
 [ -d "${config_dir}" ] || exit 0
 
 # Make sure /sysroot is mounted
