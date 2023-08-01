@@ -95,6 +95,52 @@ zypper --non-interactive install vim-small
 echo "Configured with combustion" > /etc/issue.d/combustion
 ```
 
+Perform modifications in the initrd environment
+-----------------------------------------------
+
+Using the `# combustion: prepare` marker, the initrd environment can be modified
+for instance to perform tasks before `/sysroot` is mounted or to write
+NetworkManager connection configuration into
+`/etc/NetworkManager/system-connections/`. If the marker is present, the script
+is invoked with `--prepare` as parameter from `combustion-prepare.service`, in
+addition to the main invocation inside the transaction later.
+Example:
+
+```bash
+#!/bin/bash
+# combustion: network prepare
+set -euxo pipefail
+
+nm_config() {
+    umask 077 # Required for NM config
+    mkdir -p /etc/NetworkManager/system-connections/
+    cat >/etc/NetworkManager/system-connections/static.nmconnection <<-EOF
+    [connection]
+    id=static
+    type=ethernet
+    autoconnect=true
+
+    [ipv4]
+    method=manual
+    dns=192.168.100.1
+    address1=192.168.100.42/24,192.168.100.1
+EOF
+}
+
+if [ "${1-}" = "--prepare" ]; then
+    nm_config # Configure NM in the initrd
+    exit 0
+fi
+
+# Redirect output to the console
+exec > >(exec tee -a /dev/tty0) 2>&1
+
+nm_config # Configure NM in the system
+curl example.com
+# Leave a marker
+echo "Configured with combustion" > /etc/issue.d/combustion
+```
+
 How it works
 ------------
 
@@ -107,7 +153,8 @@ ConditionKernelCommandLine is fulfilled and it'll be required by initrd.target.
 This pulls in combustion-prepare.service, which runs after the config drive or
 QEMU fw_cfg blob appears (see combustion.rules for details). The combustion
 configuration is copied from the config source into /dev/shm/combustion/config
-(this is accessible in `transactional-update shell` later).
+(this is accessible in `transactional-update shell` later). If the script
+contains the `prepare` flag, it's executed now with the `--prepare` option.
 If the `network` flag is present, networking is enabled in the initrd.
 After /sysroot is mounted and network is up (if enabled), combustion.service
 runs, which tries to activate all mountpoints in the system's /etc/fstab and

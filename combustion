@@ -63,6 +63,18 @@ if [ "${1-}" = "--prepare" ]; then
 
 	chmod a+x "${config_dir}/script"
 
+	# Check for the magic flag "# combustion: prepare" in the script
+	if grep -qE '^# combustion:(.*)\<prepare\>' "${config_dir}/script"; then
+		# Run the script with the --prepare option
+		if ! (cd "${config_dir}"; exec ./script --prepare); then
+			echo "script --prepare failed with $?"
+			exit 1
+		fi
+	fi
+	# Note: In case ^ creates a NM config by writing to
+	# /etc/NetworkManager/system-connections/, nm-initrd-generator must not generate a
+	# default configuration anymore. This happens automatically since 1.36.0 (79885656d3).
+
 	# Check for the magic flag "# combustion: network" in the script
 	if grep -qE '^# combustion:(.*)\<network\>' "${config_dir}/script"; then
 		sh -s <<EOF
