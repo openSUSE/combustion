@@ -144,21 +144,46 @@ echo "Configured with combustion" > /etc/issue.d/combustion
 How it works
 ------------
 
-The ignition-dracut-grub2 package contains a GRUB2 config snippet which adds
-`ignition.firstboot` to the kernel commandline unless the
-`/boot/writable/firstboot_happened` flag file exists.
+### Firstboot detection
 
-If this option is found on the kernel cmdline, combustion.service's
-ConditionKernelCommandLine is fulfilled and it'll be required by initrd.target.
-This pulls in combustion-prepare.service, which runs after the config drive or
-QEMU fw_cfg blob appears (see combustion.rules for details). The combustion
-configuration is copied from the config source into /dev/shm/combustion/config
+Combustion ships a `firstboot` dracut module which introduces `firstboot.target`
+as well as a `firstboot-detect.service`. This service mounts `/sysroot/etc`
+early in the initrd (in a private namespace, to not trigger `.mount` units and
+dependencies out of order). It then checks for the following conditions:
+
+* `combustion.firstboot` or `ignition.firstboot` are present on the kernel
+cmdline
+* `/etc/machine-id` does not exist in `/sysroot`
+* `/var/lib/YaST2/reconfig_system` exists in `/sysroot`
+
+If one of them applies, it enables and starts `firstboot.target`. It's
+important that all units started by `firstboot.target` are effectively
+ordered after `firstboot-detect.service` to prevent loops. Add some Before=
+to `firstboot-detect.service` if necessary.
+
+If any of the firstboot configuration mechanisms (combustion, ignition)
+find a user specified config, they delete `/var/lib/YaST2/reconfig_system`.
+The result is that if (and only if) no configuration for those was provided,
+the file still exists in the real system and triggers interactive setup
+(jeos-firstboot, YaST Firstboot) if present.
+
+The final system eventually reaches `first-boot-complete.target` and after that
+`systemd-machine-id-commit.service`, which commits `/etc/machine-id` to disk and
+thus `firstboot-detect.service` no longer triggers `firstboot.target` on
+subsequent boots.
+
+### Combustion
+
+`firstboot.target` pulls in `combustion.service` and
+`combustion-prepare.service`. The latter runs after the config drive or
+QEMU fw_cfg blob appears (see `combustion.rules` for details). The combustion
+configuration is copied from the config source into `/dev/shm/combustion/config`
 (this is accessible in `transactional-update shell` later). If the script
-contains the `prepare` flag, it's executed now with the `--prepare` option.
-If the `network` flag is present, networking is enabled in the initrd.
-After /sysroot is mounted and network is up (if enabled), combustion.service
-runs, which tries to activate all mountpoints in the system's /etc/fstab and
-then calls transactional-update in a chroot.
+contains the `prepare` flag, it's executed now with the `--prepare` option. If
+the `network` flag is present, networking is enabled in the initrd. After
+`/sysroot` is mounted and network is up (if enabled), `combustion.service` runs,
+which tries to activate all mountpoints in the system's /etc/fstab and then
+calls transactional-update in a chroot.
 
 In this transactional-update session the script is started and the exit code
 recorded. If the script failed, transactional-update rollback is called and
@@ -169,6 +194,6 @@ in a warning.
 /sysroot is unmounted and mounted again, so that the default subvolume gets
 reevaluated and directly booted into.
 
-The ignition-firstboot-complete service in the final system runs, which creates
-the firstboot_happened flag file. Thus combustion does not run on subsequent
-boots.
+Now, `initrd-parse-etc.service` can evaluate the final `/sysroot/etc/fstab` and
+create the matching `sysroot-FOO.mount` units which are started before switching
+into the root filesystem.

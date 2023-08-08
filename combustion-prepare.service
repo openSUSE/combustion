@@ -2,11 +2,6 @@
 Description=Combustion (preparations)
 DefaultDependencies=false
 
-# Systemd evaluates Requires/After before conditions, so this unit is pulled in
-# even when combustion.service won't run.
-ConditionKernelCommandLine=|ignition.firstboot
-ConditionKernelCommandLine=|combustion.firstboot
-
 # Config drive has to be available
 Wants=dev-combustion-config.device
 After=dev-combustion-config.device

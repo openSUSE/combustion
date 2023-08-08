@@ -1,0 +1,10 @@
+[Unit]
+Description=Initrd Firstboot
+
+# Make sure this is stopped before switch root or emergency:
+# https://github.com/systemd/systemd/issues/3436
+Conflicts=initrd-switch-root.target umount.target
+Conflicts=dracut-emergency.service emergency.service emergency.target
+
+[Install]
+RequiredBy=initrd.target

@@ -2,9 +2,6 @@
 Description=Combustion
 DefaultDependencies=false
 
-ConditionKernelCommandLine=|ignition.firstboot
-ConditionKernelCommandLine=|combustion.firstboot
-
 # /sysroot needs to be available, but it's temporarily stopped
 # for remounting so a direct requirement is not possible
 Requires=initrd-root-device.target
@@ -23,6 +20,9 @@ After=ignition-complete.target
 # So that /etc/fstab's x-initrd.mount entries are read (again) later
 Before=initrd-parse-etc.service
 
+# Without DefaultDependencies the target would be reached without us
+Before=firstboot.target
+
 Conflicts=initrd-switch-root.target umount.target
 Conflicts=dracut-emergency.service emergency.service emergency.target
 
@@ -31,4 +31,4 @@ Type=oneshot
 ExecStart=/usr/bin/combustion
 
 [Install]
-RequiredBy=initrd.target
+RequiredBy=firstboot.target
