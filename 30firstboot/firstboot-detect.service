@@ -1,0 +1,33 @@
+[Unit]
+Description=Detect Firstboot
+DefaultDependencies=no
+
+# This needs /sysroot to be mountable
+# Should also include systemd-fsck-root, but that would create a cycle
+# with dracut-initqueue below.
+Requires=initrd-root-device.target
+After=initrd-root-device.target
+
+# But before it's actually mounted
+Before=sysroot.mount
+
+# Combustion/ignition may configure networking, which runs during
+# the initqueue (wicked) or has its own service (NM)
+Before=dracut-initqueue.service nm-initrd.service
+
+# Make sure this is stopped before switch root or emergency:
+# https://github.com/systemd/systemd/issues/3436
+Conflicts=initrd-switch-root.target umount.target
+Conflicts=dracut-emergency.service emergency.service emergency.target
+
+[Service]
+Type=oneshot
+# This has to mount /sysroot as /sysroot, but starting sysroot.mount would
+# screw up ordering
+PrivateMounts=true
+# Work around https://github.com/systemd/systemd/issues/28723
+TemporaryFileSystem=/run/mount
+ExecStart=/usr/bin/firstboot-detect
+
+[Install]
+RequiredBy=initrd.target

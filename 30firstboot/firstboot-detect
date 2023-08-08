@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+what=$(systemctl show -P What sysroot.mount)
+opts=$(systemctl show -P Options sysroot.mount)
+mount -o "$opts" "$what" /sysroot
+
+# Handle x-initrd.mount without initrd-parse-etc.service
+awk '$4 ~ /x-initrd.mount/ { if(system("mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
+
+if [ -e /sysroot/var/lib/YaST2/reconfig_system ] || ! [ -e /sysroot/etc/machine-id ] \
+	|| grep -qw 'ignition\.firstboot' /proc/cmdline || grep -qw 'combustion\.firstboot' /proc/cmdline; then
+	echo "Firstboot detected"
+	# Make initrd.target require firstboot.target
+	systemctl enable --quiet firstboot.target
+	# As initrd.target/start was already scheduled, ^ does not have any immediate effect.
+	# Triggering a start of initrd.target again schedules the missing jobs.
+	# With --job-mode=fail this fails if any of those missing jobs is destructive, likely
+	# caused by dep cycles in firstboot units.
+	systemctl start --now --no-block --job-mode=fail initrd.target
+fi
