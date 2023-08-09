@@ -144,7 +144,7 @@ if systemctl cat sysroot-usr.mount &>/dev/null; then
 fi
 
 # Have to take care of x-initrd.mount first and from the outside
-awk '$4 ~ /x-initrd.mount/ { system("findmnt /sysroot" $2 " >/dev/null || mount -t " $3 " -o " $4 " " $1 " /sysroot" $2) }' /sysroot/etc/fstab
+awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
 
 # Make sure the old snapshot is relabeled too, otherwise syncing its /etc fails.
 if [ -e /lib/dracut/hooks/pre-pivot/50-selinux-microos-relabel.sh ]; then
