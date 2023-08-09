@@ -16,6 +16,10 @@ install() {
 	mkdir -p "${initdir}/${systemdsystemunitdir}/ignition-mount.service.d/"
 	echo -e "[Service]\nExecStop=" > "${initdir}/${systemdsystemunitdir}/ignition-mount.service.d/noexecstop.conf"
 
+	# Work around https://github.com/systemd/systemd/pull/28718
+	mkdir -p "${initdir}/${systemdsystemunitdir}/initrd-parse-etc.service.d/"
+	echo -e "[Unit]\nConflicts=emergency.target" > "${initdir}/${systemdsystemunitdir}/initrd-parse-etc.service.d/emergency.conf"
+
 	# Wait up to 10s (30s on aarch64) for the config drive
 	devtimeout=10
 	[ "$(uname -m)" = "aarch64" ] && devtimeout=30
