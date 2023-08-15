@@ -174,6 +174,9 @@ subsequent boots.
 
 ### Combustion
 
+The `combustion` dracut module is included by default, but omitted if dracut is
+run on an already configured system in `hostonly` mode.
+
 `firstboot.target` pulls in `combustion.service` and
 `combustion-prepare.service`. The latter runs after the config drive or
 QEMU fw_cfg blob appears (see `combustion.rules` for details). The combustion

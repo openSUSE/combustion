@@ -1,3 +1,11 @@
+check() {
+	# Omit if building for this already configured system
+	if [[ $hostonly ]] && [ -e /etc/machine-id ] && ! [ -e /var/lib/YaST2/reconfig_system ]; then
+		return 255
+	fi
+	return 0
+}
+
 depends() {
 	echo bash firstboot network systemd url-lib
 }
