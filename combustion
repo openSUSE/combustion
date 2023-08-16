@@ -129,6 +129,7 @@ trap cleanup EXIT
 # "/run/combustion/mount/combustion" and then calls combustion
 if [ -d "${config_mount}/combustion" ]; then
 	rm -rf "${config_dir}"
+	mkdir -p "${exchangedir}"
 	cp -R "${config_mount}/combustion" "${config_dir}"
 	chmod a+x "${config_dir}/script"
 fi
@@ -143,8 +144,9 @@ if systemctl cat sysroot-usr.mount &>/dev/null; then
 	systemctl start sysroot-usr.mount
 fi
 
-# Have to take care of x-initrd.mount first and from the outside
-awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
+# Have to take care of x-initrd.mount first and from the outside.
+# Note: ignition-kargs-helper calls combustion but already mounted those itself.
+awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("findmnt /sysroot/" $2 " >/dev/null || mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
 
 # Make sure the old snapshot is relabeled too, otherwise syncing its /etc fails.
 if [ -e /lib/dracut/hooks/pre-pivot/50-selinux-microos-relabel.sh ]; then
