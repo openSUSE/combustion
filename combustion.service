@@ -28,7 +28,7 @@ Conflicts=dracut-emergency.service emergency.service emergency.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/combustion
+ExecStart=/usr/bin/combustion --complete
 
 [Install]
 RequiredBy=firstboot.target
