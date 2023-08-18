@@ -98,6 +98,15 @@ EOF
 	exit 0
 fi
 
+# Set by combustion.service but not ignition-kargs-helper.
+# Controls whether config is actually completed by this step,
+# triggering deletion of /var/lib/YaST2/reconfig_system
+complete=0
+
+if [ "${1-}" = "--complete" ]; then
+	complete=1
+fi
+
 delete_resolv_conf=0
 
 cleanup() {
@@ -208,6 +217,8 @@ else
 	chroot /sysroot snapper --no-dbus create -d "After combustion configuration" || :
 fi
 
-rm -f /sysroot/var/lib/YaST2/reconfig_system
+if [ "${complete}" -eq 1 ]; then
+	rm -f /sysroot/var/lib/YaST2/reconfig_system
+fi
 
 exit 0
