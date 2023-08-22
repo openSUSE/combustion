@@ -153,8 +153,9 @@ dependencies out of order). It then checks for the following conditions:
 
 * `combustion.firstboot` or `ignition.firstboot` are present on the kernel
 cmdline
-* `/etc/machine-id` does not exist in `/sysroot`
-* `/var/lib/YaST2/reconfig_system` exists in `/sysroot`
+* `/etc/machine-id` does not exist in `/sysroot`. Note: Unlike systemd's
+`ConditionFirstBoot`, this is not triggered by "uninitialized" in the
+machine-id file or influcenced by `systemd.firstboot=` on the kernel cmdline.
 
 If one of them applies, it enables and starts `firstboot.target`. It's
 important that all units started by `firstboot.target` are effectively
