@@ -5,7 +5,7 @@ opts=$(systemctl show -P Options sysroot.mount)
 mount -o "$opts" "$what" /sysroot
 
 # Handle x-initrd.mount without initrd-parse-etc.service
-awk '$4 ~ /x-initrd.mount/ { if(system("mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
+awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
 
 if [ -e /sysroot/var/lib/YaST2/reconfig_system ] || ! [ -e /sysroot/etc/machine-id ] \
 	|| grep -qw 'ignition\.firstboot' /proc/cmdline || grep -qw 'combustion\.firstboot' /proc/cmdline; then
