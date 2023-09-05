@@ -1,7 +1,15 @@
 #!/bin/sh
 set -eu
-what=$(systemctl show -P What sysroot.mount)
-opts=$(systemctl show -P Options sysroot.mount)
+what="$(systemctl show -P What sysroot.mount)"
+opts="$(systemctl show -P Options sysroot.mount)"
+
+# Catch cases where sysroot isn't a device,
+# especially kiwi's install:CDLABEL=INSTALL syntax.
+if ! echo "$what" | grep -q ^/; then
+	echo "Unable to detect firstboot on $what" >&2
+	exit 0
+fi
+
 mount -o "$opts" "$what" /sysroot
 
 # Handle x-initrd.mount without initrd-parse-etc.service
