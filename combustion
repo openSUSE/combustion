@@ -24,7 +24,8 @@ if [ "${1-}" = "--prepare" ]; then
 	fi
 
 	# Try disks next - both lower and upper case
-	for label in combustion COMBUSTION ignition IGNITION; do
+	# "INSTALL" is used as label for KIWI selfinstall .isos. Try those as fallback.
+	for label in combustion COMBUSTION ignition IGNITION install INSTALL; do
 		[ -d "${config_dir}" ] && break
 		[ -e "/dev/disk/by-label/${label}" ] || continue
 
