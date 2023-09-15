@@ -16,8 +16,8 @@ install() {
 	mkdir -p "${initdir}/${systemdsystemunitdir}/ignition-mount.service.d/"
 	echo -e "[Service]\nExecStop=" > "${initdir}/${systemdsystemunitdir}/ignition-mount.service.d/noexecstop.conf"
 
-	# Wait up to 10s (30s on aarch64) for the config drive
-	devtimeout=10
+	# Wait up to 15s (30s on aarch64) for the config drive
+	devtimeout=15
 	[ "$(uname -m)" = "aarch64" ] && devtimeout=30
 	mkdir -p "${initdir}/${systemdsystemunitdir}/dev-combustion-config.device.d/"
 	echo -e "[Unit]\nJobTimeoutSec=${devtimeout}" > "${initdir}/${systemdsystemunitdir}/dev-combustion-config.device.d/timeout.conf"
