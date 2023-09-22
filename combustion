@@ -156,6 +156,13 @@ if systemctl cat sysroot-usr.mount &>/dev/null; then
 	systemctl start sysroot-usr.mount
 fi
 
+# Care needs to be taken that umount -R /sysroot later works as expected,
+# taking mount propagation and other processes in private mount namespaces into account.
+# Ideally combustion runs in its own mount namespace, but the needed redesign breaks
+# some subtle interactions with the outside.
+# Make /sysroot private so that the next mounts are not visible in other namespaces.
+mount --make-private /sysroot
+
 # Have to take care of x-initrd.mount first and from the outside.
 # Note: ignition-kargs-helper calls combustion but already mounted those itself.
 awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("findmnt /sysroot/" $2 " >/dev/null || mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
@@ -170,9 +177,9 @@ fi
 
 # Prepare chroot
 for i in proc sys dev; do
-	mount --rbind /$i /sysroot/$i
+	# Make these rslave so that unmounting does not affect the real /$i
+	mount --make-rslave --rbind /$i /sysroot/$i
 done
-mount --make-rslave /sysroot
 
 # Mount everything we can, errors deliberately ignored
 chroot /sysroot mount -a || true
