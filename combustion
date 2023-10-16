@@ -218,6 +218,24 @@ EOF
 		chroot /sysroot transactional-update --no-selfupdate rollback
 		exit 1
 	fi
+
+	# If the mount options for /sysroot include subvol(id)=...,
+	# it would mount the old snapshot again. Override it.
+	# At this point, /sysroot is mounted so systemctl show returns the active mount options,
+	# not the configured ones. Use cat to get the configured ones instead.
+	if systemctl cat sysroot.mount | grep -q '\<subvol\(id\)\?='; then
+		# systemctl cat can't query a specific property, so work with the active options instead here...
+		rootopts="$(systemctl show -P Options sysroot.mount | sed -Ee 's/(^|,)subvol=[^,]*(,|$)//g;s/(^|,)subvolid=[^,]*(,|$)//g')"
+		# Apparently there is no better API?
+		newdefault=$(btrfs subvolume get-default /sysroot | sed -e 's/^.* path \([^[:space:]]*\).*$/\1/')
+		# Drop-ins in /etc have precedence over generated files in /run.
+		mkdir -p /etc/systemd/system/sysroot.mount.d/
+		cat > /etc/systemd/system/sysroot.mount.d/combustion-newsubvol.conf <<-EOF
+			[Mount]
+			Options=${rootopts},subvol=${newdefault}
+		EOF
+		systemctl daemon-reload # Unfortunately required for this :-/
+	fi
 else
 	mount -o remount,rw /sysroot
 	if ! chroot /sysroot sh -e -c "cd '${config_dir}'; chmod a+x script; ./script"; then
