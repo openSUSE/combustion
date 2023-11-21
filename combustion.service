@@ -2,10 +2,11 @@
 Description=Combustion
 DefaultDependencies=false
 
-# /sysroot needs to be available, but it's temporarily stopped
-# for remounting so a direct requirement is not possible
+# This changes the default subvol so has to run before /sysroot,
+# but /sysroot has to be mountable.
+Before=sysroot.mount
 Requires=initrd-root-device.target
-After=initrd-root-device.target
+After=initrd-root-device.target systemd-fsck-root.service
 
 # combustion-prepare sets up network, if required
 Requires=combustion-prepare.service
@@ -14,11 +15,10 @@ After=combustion-prepare.service
 # Optionally make network available
 After=network.target
 
-# After ignition completed its stuff
-After=ignition-complete.target
-
-# So that /etc/fstab's x-initrd.mount entries are read (again) later
-Before=initrd-parse-etc.service
+# This runs in between ignition stages which don't need /sysroot
+# and stages which do. ignition-kargs might trigger a reboot, so
+# order after that to avoid running combustion twice.
+After=ignition-kargs.service
 
 # Without DefaultDependencies the target would be reached without us
 Before=firstboot.target

@@ -15,18 +15,12 @@ install() {
 	inst_simple "${moddir}/combustion-prepare.service" "${systemdsystemunitdir}/combustion-prepare.service"
 	inst_simple "${moddir}/combustion.rules" "/etc/udev/rules.d/70-combustion.rules"
 	$SYSTEMCTL -q --root "$initdir" enable combustion.service
-	inst_multiple awk chroot findmnt grep rmdir
+	inst_multiple awk chroot findmnt grep rmdir unshare
 	inst_simple "${moddir}/combustion" "/usr/bin/combustion"
 
 	# Autodetect dasd devices on s390x to discover the config drive
 	mkdir -p "${initdir}/etc/modprobe.d"
 	echo "options dasd_mod dasd=autodetect" > "${initdir}/etc/modprobe.d/dasd-autodetect.conf"
-
-	# ignition-mount.service mounts stuff below /sysroot in ExecStart and umounts
-	# it on ExecStop, failing if umounting fails. This conflicts with the
-	# mounts/umounts done by combustion. Just let combustion do it instead.
-	mkdir -p "${initdir}/${systemdsystemunitdir}/ignition-mount.service.d/"
-	echo -e "[Service]\nExecStop=" > "${initdir}/${systemdsystemunitdir}/ignition-mount.service.d/noexecstop.conf"
 
 	# Wait up to 10s (30s on aarch64) for the config drive
 	devtimeout=10

@@ -108,6 +108,18 @@ if [ "${1-}" = "--complete" ]; then
 	complete=1
 fi
 
+# Create a mount namespace. This does some manual mounts which might confuse systemd otherwise.
+# In the future, when combustion is not called explicitly from ignition, replace this with:
+# PrivateMounts=true
+# TemporaryFileSystem=/run/mount
+if [ -z "${MNT_UNSHARED-}" ]; then
+	MNT_UNSHARED=1 exec unshare -m --propagation slave "$0" "$@"
+fi
+unset MNT_UNSHARED
+# Work around https://github.com/systemd/systemd/issues/28723
+mkdir -p /run/mount
+mount -t tmpfs tmpfs /run/mount
+
 delete_resolv_conf=0
 
 cleanup() {
@@ -117,20 +129,7 @@ cleanup() {
         	rm -f /sysroot/etc/resolv.conf || true
 	fi
 
-	if findmnt /sysroot >/dev/null; then
-		# umount and remount so that the new default subvol is used
-		umount -R /sysroot
-		# Manual umount confuses systemd sometimes because it's async and the
-		# .mount unit might still be active when the "start" is queued, making
-		# it a noop, which ultimately leaves /sysroot unmounted
-		# (https://github.com/systemd/systemd/issues/20329). To avoid that,
-		# wait until systemd processed the umount events. In a chroot (or with
-		# SYSTEMD_OFFLINE=1) systemctl always succeeds, so avoid an infinite loop.
-		if ! systemctl --quiet is-active does-not-exist.mount; then
-			while systemctl --quiet is-active sysroot.mount; do sleep 0.5; done
-		fi
-	fi
-	systemctl start sysroot.mount
+	# This runs in a private mount namespace so unmounting is not necessary
 }
 
 # Note: The /sysroot remounting during cleanup happens unconditionally.
@@ -140,6 +139,12 @@ trap cleanup EXIT
 # Compatibility for ignition-kargs-helper, which drops a script into
 # "/run/combustion/mount/combustion" and then calls combustion
 if [ -d "${config_mount}/combustion" ]; then
+	# It also mounted /sysroot itself
+	if findmnt /sysroot >/dev/null; then
+		umount -R /sysroot
+	fi
+	# And set SYSTEMD_OFFLINE=1...
+	unset SYSTEMD_OFFLINE
 	rm -rf "${config_dir}"
 	mkdir -p "${exchangedir}"
 	cp -R "${config_mount}/combustion" "${config_dir}"
@@ -148,12 +153,15 @@ fi
 
 [ -d "${config_dir}" ] || exit 0
 
-# Make sure /sysroot is mounted
-systemctl start sysroot.mount
+what=$(systemctl show -P What sysroot.mount)
+opts=$(systemctl show -P Options sysroot.mount)
+mount -o "$opts" "$what" /sysroot
 
 # Same for /sysroot/usr if it exists (e.g. through mount.usr)
 if systemctl cat sysroot-usr.mount &>/dev/null; then
-	systemctl start sysroot-usr.mount
+	what=$(systemctl show -P What sysroot-usr.mount)
+	opts=$(systemctl show -P Options sysroot-usr.mount)
+	mount -o "$opts" "$what" /sysroot/usr
 fi
 
 # Care needs to be taken that umount -R /sysroot later works as expected,
