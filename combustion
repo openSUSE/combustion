@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: 2020 SUSE LLC
+# SPDX-FileCopyrightText: 2023 SUSE LLC
 # SPDX-License-Identifier: GPL-2.0-or-later
 set -euo pipefail
 
@@ -21,6 +21,20 @@ if [ "${1-}" = "--prepare" ]; then
 			exit 1
 		fi
 		# TODO: Support other files, e.g. with a tarball or fs image?
+	fi
+
+	# Try VMware guestinfo next
+	if ! [ -d "${config_dir}" ] && [ "$(systemd-detect-virt)" = "vmware" ]; then
+		mkdir -p "${config_dir}"
+		# The exit code isn't really useful or documented. Print all errors and only treat
+		# a zero exit code + nonempty stdout as success.
+		echo "Trying vmware-rpctool"
+		if ! vmware-rpctool "info-get guestinfo.combustion.script" >"${config_dir}/script" \
+		   || ! [ -s "${config_dir}/script" ]; then
+			# vmware-rpctool failed or the script is empty
+			rm "${config_dir}/script"
+			rmdir "${config_dir}"
+		fi
 	fi
 
 	# Try disks next - both lower and upper case
