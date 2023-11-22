@@ -29,12 +29,15 @@ if [ "${1-}" = "--prepare" ]; then
 		# The exit code isn't really useful or documented. Print all errors and only treat
 		# a zero exit code + nonempty stdout as success.
 		echo "Trying vmware-rpctool"
-		if ! vmware-rpctool "info-get guestinfo.combustion.script" >"${config_dir}/script" \
+		if ! vmware-rpctool "info-get guestinfo.combustion.script" > "${config_dir}/script.gz.b64" \
+		   || ! [ -s "${config_dir}/script.gz.b64" ] \
+		   || ! base64 -d < "${config_dir}/script.gz.b64" | gzip -cd > "${config_dir}/script" \
 		   || ! [ -s "${config_dir}/script" ]; then
 			# vmware-rpctool failed or the script is empty
-			rm "${config_dir}/script"
+			rm -f "${config_dir}/script.gz.b64" "${config_dir}/script"
 			rmdir "${config_dir}"
 		fi
+		rm -f "${config_dir}/script.gz.b64"
 	fi
 
 	# Try disks next - both lower and upper case

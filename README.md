@@ -43,7 +43,7 @@ Example parameter for QEMU:
 -fw_cfg name=opt/org.opensuse.combustion/script,file=/var/combustion-script
 
 If the VMware guestinfo parameter "guestinfo.combustion.script" is set and
-nonempty, it is used as script.
+nonempty, it is treated as a base64 encoded gzipped script.
 
 You can do everything necessary for initial system configuration from this
 script, including addition of ssh keys, adding users, changing passwords
