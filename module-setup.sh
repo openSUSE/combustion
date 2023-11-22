@@ -16,7 +16,7 @@ install() {
 	inst_simple "${moddir}/combustion.rules" "/etc/udev/rules.d/70-combustion.rules"
 	$SYSTEMCTL -q --root "$initdir" enable combustion.service
 	inst_multiple awk chroot findmnt grep rmdir systemd-detect-virt
-	inst_multiple -o vmware-rpctool
+	inst_multiple -o base64 gzip vmware-rpctool
 	inst_simple "${moddir}/combustion" "/usr/bin/combustion"
 
 	# Autodetect dasd devices on s390x to discover the config drive
