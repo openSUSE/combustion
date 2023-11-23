@@ -18,3 +18,5 @@ ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="IGNITION", ENV{SYSTEMD_ALI
 # There are add events for keys inside fw_cfg, but they are unreliable: https://github.com/systemd/systemd/issues/28638
 # Using the platform device with add|bind does not work with TAG+="systemd" for some reason, so use the module...
 ACTION=="add", SUBSYSTEM=="module", KERNEL=="qemu_fw_cfg", TEST=="/sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config", TAG+="systemd"
+# VMware guestinfo value. Using sh allows PATH lookup traversal and checking for nonempty stdout without logging the value.
+ACTION=="add", DEVPATH=="/devices/virtual/misc/vmci", PROGRAM=="/bin/sh -c '[ $$(vmware-rpctool \"info-get guestinfo.combustion.script\" | wc -c) -gt 2 ]'", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config", TAG+="systemd"
