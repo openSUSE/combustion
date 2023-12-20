@@ -106,9 +106,12 @@ if [ "${1-}" = "--prepare" ]; then
 				# Re-trigger generation of network rules and apply them
 				udevadm control --reload
 				udevadm trigger --subsystem-match net --action add
-			else
+			elif [ -e "${hookdir}/cmdline/99-nm-config.sh" ]; then
 				# NetworkManager
 				. "${hookdir}/cmdline/99-nm-config.sh"
+			else
+				echo "ERROR: unknown network framework" >&2
+				exit 1
 			fi
 EOF
 	fi
