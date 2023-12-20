@@ -2,6 +2,10 @@
 Description=Detect Firstboot
 DefaultDependencies=no
 
+# In this mode, the zipl initrd uses grub2-emu to kexec the real kernel
+# and initrd. Don't run there, only in the real initrd (bsc#1218065).
+ConditionKernelCommandLine=!initgrub
+
 # This needs /sysroot to be mountable
 # Should also include systemd-fsck-root, but that would create a cycle
 # with dracut-initqueue below.
