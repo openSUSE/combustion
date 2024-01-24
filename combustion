@@ -263,7 +263,7 @@ EOF
 	fi
 else
 	mount -o remount,rw /sysroot
-	if ! chroot /sysroot sh -e -c "cd '${config_dir}'; chmod a+x script; ./script"; then
+	if ! chroot /sysroot sh -e -c "cd '${config_dir}'; ./script"; then
 		echo "Command failed"
 		exit 1
 	fi
