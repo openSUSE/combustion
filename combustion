@@ -267,7 +267,7 @@ else
 		echo "Command failed"
 		exit 1
 	fi
-	chroot /sysroot snapper --no-dbus create -d "After combustion configuration" || :
+	chroot /sysroot snapper --no-dbus create -d "After combustion configuration" --userdata "important=yes" || :
 fi
 
 if [ "${complete}" -eq 1 ]; then
