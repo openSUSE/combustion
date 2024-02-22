@@ -15,10 +15,12 @@ if [ "${1-}" = "--prepare" ]; then
 	# Try fw_cfg first
 	if [ -e "/sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion" ]; then
 		mkdir -p "${config_dir}"
-		if ! cp /sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion/script/raw \
-		        "${config_dir}/script"; then
-			echo "Failed to copy script from fw_cfg!"
-			exit 1
+		if [ -e /sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion/script ]; then
+			if ! cp /sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion/script/raw \
+			        "${config_dir}/script"; then
+				echo "Failed to copy script from fw_cfg!"
+				exit 1
+			fi
 		fi
 		# TODO: Support other files, e.g. with a tarball or fs image?
 	fi
