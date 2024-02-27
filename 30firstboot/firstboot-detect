@@ -18,6 +18,12 @@ awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("mount --targe
 if ! [ -e /sysroot/etc/machine-id ] \
 	|| grep -qw 'ignition\.firstboot' /proc/cmdline || grep -qw 'combustion\.firstboot' /proc/cmdline; then
 	echo "Firstboot detected"
+	if [ "$(uname -m)" = "s390x" ]; then
+		# On s390x, attached DASDs need to be enabled first to appear as block devices.
+		# On the first boot this is necessary to probe for configuration sources.
+		echo "Trying to enable all available DASDs"
+		chzdev dasd --offline --existing --enable --active || echo "Couldn't enable all devices, trying to continue anyway." >&2
+	fi
 	# Make initrd.target require firstboot.target
 	systemctl enable --quiet firstboot.target
 	# As initrd.target/start was already scheduled, ^ does not have any immediate effect.
