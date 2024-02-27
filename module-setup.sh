@@ -19,10 +19,6 @@ install() {
 	inst_multiple -o base64 gzip vmware-rpctool
 	inst_simple "${moddir}/combustion" "/usr/bin/combustion"
 
-	# Autodetect dasd devices on s390x to discover the config drive
-	mkdir -p "${initdir}/etc/modprobe.d"
-	echo "options dasd_mod dasd=autodetect" > "${initdir}/etc/modprobe.d/dasd-autodetect.conf"
-
 	# ignition-mount.service mounts stuff below /sysroot in ExecStart and umounts
 	# it on ExecStop, failing if umounting fails. This conflicts with the
 	# mounts/umounts done by combustion. Just let combustion do it instead.
