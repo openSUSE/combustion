@@ -1,6 +1,6 @@
 check() {
 	# Omit if building for this already configured system
-	if [[ $hostonly ]] && [ -e /etc/machine-id ]; then
+	if [[ $hostonly ]] && [ -e "${dracutsysrootdir}/etc/machine-id" ]; then
 		return 255
 	fi
 	return 0
