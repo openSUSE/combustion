@@ -31,3 +31,10 @@ install() {
 	mkdir -p "${initdir}/${systemdsystemunitdir}/dev-combustion-config.device.d/"
 	echo -e "[Unit]\nJobTimeoutSec=${devtimeout}" > "${initdir}/${systemdsystemunitdir}/dev-combustion-config.device.d/timeout.conf"
 }
+
+installkernel() {
+	# Modules for config sources
+	hostonly='' instmods ext4
+	# hostonly is fine here, only include them if they fit the current HW
+	instmods qemu_fw_cfg vmw_vsock_vmci_transport
+}
