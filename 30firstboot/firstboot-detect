@@ -22,7 +22,7 @@ if ! [ -e /sysroot/etc/machine-id ] \
 		# On s390x, attached DASDs need to be enabled first to appear as block devices.
 		# On the first boot this is necessary to probe for configuration sources.
 		echo "Trying to enable all available DASDs"
-		chzdev dasd --offline --existing --enable --active || echo "Couldn't enable all devices, trying to continue anyway." >&2
+		chzdev dasd --offline --existing --enable --active || echo "Couldn't enable all DASD devices, trying to continue anyway." >&2
 	fi
 	# Make initrd.target require firstboot.target
 	systemctl enable --quiet firstboot.target
