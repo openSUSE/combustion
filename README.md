@@ -45,6 +45,10 @@ Example parameter for QEMU:
 If the VMware guestinfo parameter "guestinfo.combustion.script" is set and
 nonempty, it is treated as a base64 encoded gzipped script.
 
+If a dracut cmdline parammeter "combustion.url" is set, the script is
+downloaded using curl. In this case, the prepare step is run with the default
+initrd network configuration already applied.
+
 You can do everything necessary for initial system configuration from this
 script, including addition of ssh keys, adding users, changing passwords
 or even doing partitioning changes.

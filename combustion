@@ -8,9 +8,41 @@ config_mount="/run/combustion/mount"
 exchangedir="/dev/shm/combustion/"
 config_dir="${exchangedir}/config"
 
+get_combustion_url() {
+	(set +eu; . /lib/dracut-lib.sh; getarg combustion.url)
+}
+
 if [ "${1-}" = "--prepare" ]; then
 	rm -rf "${exchangedir}"
 	mkdir "${exchangedir}"
+
+	enable_network() {
+		sh -s <<'EOF'
+			. /lib/dracut-lib.sh
+			# Set rd.neednet if not already done and reevaluate it (module-specific)
+			getargbool 0 'rd.neednet' && exit 0
+			echo rd.neednet=1 > /etc/cmdline.d/40-combustion-neednet.conf
+			if [ -e "${hookdir}/pre-udev/60-net-genrules.sh" ]; then
+				# Wicked
+				. "${hookdir}/pre-udev/60-net-genrules.sh"
+				# Re-trigger generation of network rules and apply them
+				udevadm control --reload
+				udevadm trigger --subsystem-match net --action add
+			elif [ -e "${hookdir}/cmdline/99-nm-config.sh" ]; then
+				# NetworkManager
+				. "${hookdir}/cmdline/99-nm-config.sh"
+			else
+				echo "ERROR: unknown network framework" >&2
+				exit 1
+			fi
+EOF
+	}
+
+	if [ -n "$(get_combustion_url)" ]; then
+		echo "URL provided, downloading config later"
+		enable_network
+		exit 0
+	fi
 
 	# Try fw_cfg first
 	if [ -e "/sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion" ]; then
@@ -95,25 +127,7 @@ if [ "${1-}" = "--prepare" ]; then
 
 	# Check for the magic flag "# combustion: network" in the script
 	if grep -qE '^# combustion:(.*)\<network\>' "${config_dir}/script"; then
-		sh -s <<'EOF'
-			. /lib/dracut-lib.sh
-			# Set rd.neednet if not already done and reevaluate it (module-specific)
-			getargbool 0 'rd.neednet' && exit 0
-			echo rd.neednet=1 > /etc/cmdline.d/40-combustion-neednet.conf
-			if [ -e "${hookdir}/pre-udev/60-net-genrules.sh" ]; then
-				# Wicked
-				. "${hookdir}/pre-udev/60-net-genrules.sh"
-				# Re-trigger generation of network rules and apply them
-				udevadm control --reload
-				udevadm trigger --subsystem-match net --action add
-			elif [ -e "${hookdir}/cmdline/99-nm-config.sh" ]; then
-				# NetworkManager
-				. "${hookdir}/cmdline/99-nm-config.sh"
-			else
-				echo "ERROR: unknown network framework" >&2
-				exit 1
-			fi
-EOF
+		enable_network
 	fi
 
 	exit 0
@@ -134,7 +148,7 @@ cleanup() {
 	rm -rf "${exchangedir}" || true
 
 	if [ "${delete_resolv_conf}" -eq 1 ]; then
-        	rm -f /sysroot/etc/resolv.conf || true
+		rm -f /sysroot/etc/resolv.conf || true
 	fi
 
 	if findmnt /sysroot >/dev/null; then
@@ -164,6 +178,24 @@ if [ -d "${config_mount}/combustion" ]; then
 	mkdir -p "${exchangedir}"
 	cp -R "${config_mount}/combustion" "${config_dir}"
 	chmod a+x "${config_dir}/script"
+fi
+
+# Download and use a script from the given URL
+combustion_url="$(get_combustion_url)" || :
+if ! [ -d "${config_dir}" ] && [ -n "${combustion_url}" ]; then
+	echo "Downloading config..."
+	mkdir -p "${config_dir}"
+	curl --globoff --location --retry 3 --retry-connrefused --fail --show-error --output "${config_dir}/script" -- "${combustion_url}"
+	chmod a+x "${config_dir}/script"
+
+	# Check for the magic flag "# combustion: prepare" in the script
+	if grep -qE '^# combustion:(.*)\<prepare\>' "${config_dir}/script"; then
+		# Run the script with the --prepare option
+		if ! (cd "${config_dir}"; exec ./script --prepare); then
+			echo "script --prepare failed with $?"
+			exit 1
+		fi
+	fi
 fi
 
 [ -d "${config_dir}" ] || exit 0
