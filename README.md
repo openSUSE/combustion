@@ -98,6 +98,8 @@ systemctl enable sshd.service
 zypper --non-interactive install vim-small
 # Leave a marker
 echo "Configured with combustion" > /etc/issue.d/combustion
+# Close outputs and wait for tee to finish.
+exec 1>&- 2>&-; wait;
 ```
 
 Perform modifications in the initrd environment
@@ -144,6 +146,8 @@ nm_config # Configure NM in the system
 curl example.com
 # Leave a marker
 echo "Configured with combustion" > /etc/issue.d/combustion
+# Close outputs and wait for tee to finish.
+exec 1>&- 2>&-; wait;
 ```
 
 How it works
