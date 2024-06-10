@@ -16,7 +16,7 @@ install() {
 	inst_simple "${moddir}/combustion.rules" "/etc/udev/rules.d/70-combustion.rules"
 	$SYSTEMCTL -q --root "$initdir" enable combustion.service
 	inst_multiple awk chroot findmnt grep rmdir systemd-detect-virt wc
-	inst_multiple -o base64 gzip vmware-rpctool
+	inst_multiple -o base64 gzip vmware-rpctool xmllint
 	inst_simple "${moddir}/combustion" "/usr/bin/combustion"
 
 	# ignition-mount.service mounts stuff below /sysroot in ExecStart and umounts
