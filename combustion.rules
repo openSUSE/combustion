@@ -5,6 +5,11 @@
 # introduce a dev-combustion-config.device unit as alias to the actual device(s).
 # This is only used for the .service dependencies.
 
+# If combustion.url is specified, alias it to /dev/null to avoid waiting
+# IMPORT has to be on its own as it returns success or not, even with "="...
+IMPORT{cmdline}="combustion.url"
+ACTION!="remove", SUBSYSTEM=="mem", ENV{DEVPATH}=="/devices/virtual/mem/null", ENV{combustion.url}!="", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config", TAG+="systemd"
+
 # Filesystems with either combustion or ignition as label
 ACTION!="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="combustion", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
 ACTION!="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="COMBUSTION", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
@@ -14,9 +19,11 @@ ACTION!="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="IGNITION", ENV{SYSTEMD_
 # /dev/combustion/config, as some other config source with higher priority might show up later.
 #ACTION!="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="install", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
 #ACTION!="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="INSTALL", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config"
+
 # QEMU fw_cfg blob with key opt/org.opensuse.combustion
 # There are add events for keys inside fw_cfg, but they are unreliable: https://github.com/systemd/systemd/issues/28638
 # Using the platform device with add|bind does not work with TAG+="systemd" for some reason, so use the module...
 ACTION!="remove", SUBSYSTEM=="module", KERNEL=="qemu_fw_cfg", TEST=="/sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config", TAG+="systemd"
+
 # VMware guestinfo value. Using sh allows PATH lookup traversal and checking for nonempty stdout without logging the value.
 ACTION!="remove", DEVPATH=="/devices/virtual/misc/vmci", PROGRAM=="/bin/sh -c '[ $$(vmware-rpctool \"info-get guestinfo.combustion.script\" | wc -c) -gt 2 ]'", ENV{SYSTEMD_ALIAS}+="/dev/combustion/config", TAG+="systemd"
