@@ -1,0 +1,22 @@
+name: MicroOS in QEMU
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y qemu-system-x86
+        # Normally setfacl -m u:$USER:rw /dev/kvm should work, but for some
+        # reason this only sticks around for a single QEMU run. udev?
+        sudo usermod -a -G kvm "$USER"
+    - name: Test
+      run: |
+        # Needed to activate the new kvm group membership
+        sudo -u "$USER" bash test/test.sh
