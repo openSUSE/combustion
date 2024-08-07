@@ -224,3 +224,22 @@ reevaluated and directly booted into.
 Now, `initrd-parse-etc.service` can evaluate the final `/sysroot/etc/fstab` and
 create the matching `sysroot-FOO.mount` units which are started before switching
 into the root filesystem.
+
+Automated Testing
+-----------------
+
+To test combustion, it has to be installed in the target system, a new initrd
+built with it included (requires `--no-hostonly` or missing `/etc/machine-id`)
+and then rebooted with some appropriate config source attached. That is
+cumbersome even when using VMs, so there is some basic automated testing in
+the test/ subdirectory.
+
+Calling `test/test.sh` will download the latest MicroOS qcow2 image, build an
+initrd with the combustion sources from the parent directory and perform some
+basic tests. Currently this uses QEMU with three ways of providing a
+config source and validates that the script was properly executes for each of
+those.
+
+This all happens in a temporary directory. To avoid having to redownload the
+image for each `test.sh` run, it's possible to specify a less temporary
+directory as parameter.
