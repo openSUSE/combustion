@@ -19,6 +19,32 @@ and installed during image builds already.
 How to use it
 -------------
 
+The source of configuration is a script file, most commonly using sh or bash.
+You can do everything necessary for initial system configuration from this
+script, including addition of ssh keys, adding users, changing passwords
+or even doing partitioning changes.
+
+There are multiple ways to provide the configuration. In order of priority:
+
+### combustion.url kernel parameter
+
+The kernel cmdline can be used to specify a URL like `combustion.url=http://server/config/script`.
+The script is downloaded using curl, so various protocols are available.
+
+### QEMU fw_cfg
+
+If a QEMU fw_cfg blob with the name "opt/org.opensuse.combustion/script" is
+found, it is preferred and the content of that is used as script.
+Example parameter for QEMU:
+-fw_cfg name=opt/org.opensuse.combustion/script,file=/var/combustion-script
+
+### VMware guestinfo
+
+If the VMware guestinfo parameter "guestinfo.combustion.script" is set and
+nonempty, it is treated as a base64 encoded gzipped script.
+
+### Config drive
+
 The configuration files are copied from a filesystem with the LABEL
 "combustion", but to be compatible and co-installable with ignition
 (https://github.com/coreos/ignition), the LABEL "ignition" is used as fallback.
@@ -36,22 +62,6 @@ a file "script" inside, which is executed inside a transactional-update shell.
  └── ignition (optional)
      └── config.ign
 ```
-
-If a QEMU fw_cfg blob with the name "opt/org.opensuse.combustion/script" is
-found, it is preferred and the content of that is used as script.
-Example parameter for QEMU:
--fw_cfg name=opt/org.opensuse.combustion/script,file=/var/combustion-script
-
-If the VMware guestinfo parameter "guestinfo.combustion.script" is set and
-nonempty, it is treated as a base64 encoded gzipped script.
-
-If a dracut cmdline parammeter "combustion.url" is set, the script is
-downloaded using curl. In this case, the prepare step is run with the default
-initrd network configuration already applied.
-
-You can do everything necessary for initial system configuration from this
-script, including addition of ssh keys, adding users, changing passwords
-or even doing partitioning changes.
 
 Simple example
 --------------

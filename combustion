@@ -38,13 +38,14 @@ if [ "${1-}" = "--prepare" ]; then
 EOF
 	}
 
+	# Look at combustion.url first
 	if [ -n "$(get_combustion_url)" ]; then
 		echo "URL provided, downloading config later"
 		enable_network
 		exit 0
 	fi
 
-	# Try fw_cfg first
+	# Try fw_cfg next
 	if [ -e "/sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion" ]; then
 		mkdir -p "${config_dir}"
 		if ! cp /sys/firmware/qemu_fw_cfg/by_name/opt/org.opensuse.combustion/script/raw \
