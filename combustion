@@ -259,7 +259,9 @@ fi
 if [ -x /sysroot/usr/sbin/transactional-update ]; then
 	# t-u doesn't allow running arbitrary commands and
 	# also ignores the shell's exit code, so DIY.
-	if ! chroot /sysroot transactional-update shell <<EOF; then
+	# Use unshare with a PID namespace to make sure no daemonized processes
+	# like gpg-agent (triggered by zypper) stay running and keep /sysroot busy.
+	if ! unshare -p --mount-proc --kill-child -R /sysroot transactional-update shell <<EOF; then
 		cd "${config_dir}"
 		./script
 		echo \$? > "${exchangedir}/retval"
