@@ -1,0 +1,34 @@
+#!/bin/bash
+# combustion: network
+set -euxo pipefail
+exec &>/dev/ttyS0
+trap '[ $? -eq 0 ] || poweroff -f' EXIT
+curl example.com
+# Leave a marker
+echo "Configured with combustion" > /etc/issue.d/combustion
+
+cat >>/usr/bin/combustion-validate <<'EOF'
+#!/bin/bash
+set -euxo pipefail
+exec &>/dev/ttyS0
+echo root:linux | chpasswd
+trap '[ $? -eq 0 ] || poweroff -f' EXIT
+journalctl | cat
+if journalctl -b | grep "Timed out waiting for device /dev/combustion/config"; then
+    echo "FAILED: timeout"
+    exit 1
+fi
+mount -t 9p -o trans=virtio tmpdir /mnt
+touch /mnt/done
+umount /mnt
+poweroff -f
+EOF
+chmod a+x /usr/bin/combustion-validate
+
+cat >>/etc/systemd/system/combustion-validate.service <<'EOF'
+[Service]
+ExecStart=/usr/bin/combustion-validate
+[Install]
+RequiredBy=default.target
+EOF
+#systemctl enable combustion-validate.service
