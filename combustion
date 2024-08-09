@@ -152,6 +152,11 @@ cleanup() {
 	fi
 
 	if findmnt /sysroot >/dev/null; then
+		# zypper (both from t-u's selfupdate as well as the script)
+		# uses gpg which starts gpg-agent in the background. This keeps
+		# /sysroot busy, so we'll have to stop those.
+		while pkill -x gpg-agent; do sleep 0.5; done
+
 		# umount and remount so that the new default subvol is used
 		umount -R /sysroot
 		# Manual umount confuses systemd sometimes because it's async and the
