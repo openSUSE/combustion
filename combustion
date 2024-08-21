@@ -219,13 +219,6 @@ if systemctl cat sysroot-usr.mount &>/dev/null; then
 	systemctl start sysroot-usr.mount
 fi
 
-# Care needs to be taken that umount -R /sysroot later works as expected,
-# taking mount propagation and other processes in private mount namespaces into account.
-# Ideally combustion runs in its own mount namespace, but the needed redesign breaks
-# some subtle interactions with the outside.
-# Make /sysroot private so that the next mounts are not visible in other namespaces.
-mount --make-private /sysroot
-
 # Have to take care of x-initrd.mount first and from the outside.
 # Note: ignition-kargs-helper calls combustion but already mounted those itself.
 awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("findmnt /sysroot/" $2 " >/dev/null || mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
@@ -243,10 +236,21 @@ awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ { if(system("findmnt /sysr
 	fi
 )
 
-# Prepare chroot
-for i in proc sys dev; do
-	# Make these rslave so that unmounting does not affect the real /$i
-	mount --make-rslave --rbind /$i /sysroot/$i
+# Prepare chroot.
+# Ideally this would just be --rbind /dev /sysroot/dev etc., but that has subtle downsides:
+# By default, umount -R /sysroot would then propagate into the main /dev etc. and try to
+# unmount /dev/shm/ etc. which must be avoided. Disabling mount propagation with
+# --make-rslave interacts badly with other mount namespaces (used for PrivateMounts=true
+# e.g. by systemd-udevd.service): The mounts propagate, but not all unmounts, leaving e.g.
+# /sysroot/dev/shm/ mounted in udev's mnt context. To avoid all that, just bind mount
+# everything individually, then it can be unmounted without caring about propagation.
+# Alternatives are
+# a) mount --bind --make-private /sysroot /sysroot on itself, but then e.g. udev doesn't
+#    see the same /sysroot as us
+# b) Run combustion in its own mount namespace, but the needed redesign breaks some
+#    subtle interactions with the outside.
+findmnt -nrvo TARGET | grep -E '^/(sys|proc|dev)(/|$)' | while read i; do
+	mount --bind "$i" "/sysroot/$i"
 done
 
 # Mount everything we can, errors deliberately ignored
