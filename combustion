@@ -170,6 +170,11 @@ cleanup() {
 			while systemctl --quiet is-active sysroot.mount; do sleep 0.5; done
 		fi
 	fi
+
+	if grep -w /sysroot /proc/*/mountinfo; then
+		echo "Warning: /sysroot still mounted somewhere"
+	fi
+
 	systemctl start sysroot.mount
 }
 
