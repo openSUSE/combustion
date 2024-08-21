@@ -37,7 +37,7 @@ QEMU_BASEARGS=(
 # Prepare the temporary dir: Install combustion and copy resources.
 testdir="$(dirname "$0")"
 make -C "${testdir}/.." install "DESTDIR=${tmpdir}/install"
-cp "${testdir}/testscript" "${tmpdir}"
+cp "${testdir}/"{testscript,config.ign} "${tmpdir}"
 cd "$tmpdir"
 
 # Download latest MicroOS image
@@ -82,7 +82,9 @@ qemu-img snapshot -a initial openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
 
 mkdir -p configdrv/combustion/
 cp testscript configdrv/combustion/script
-/sbin/mkfs.ext4 -F -d configdrv -L IGNITION combustion.raw 16M
+mkdir -p configdrv/ignition/
+cp config.ign configdrv/ignition/config.ign
+/sbin/mkfs.ext4 -F -d configdrv -L ignition combustion.raw 16M
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
 	-kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0" \
