@@ -27,6 +27,9 @@ cat >>/usr/bin/combustion-validate <<'EOF'
 set -euxo pipefail
 exec &>/dev/ttyS0
 trap '[ $? -eq 0 ] || poweroff -f' EXIT
+if journalctl --no-pager | grep "/sysroot still mounted somewhere"; then
+    exit 1
+fi
 mount -t 9p -o trans=virtio tmpdir /mnt
 touch /mnt/done
 umount /mnt
