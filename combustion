@@ -279,7 +279,7 @@ if [ -x /sysroot/usr/sbin/transactional-update ]; then
 		./script
 		echo \$? > "${exchangedir}/retval"
 		# Snapshot got touched while the policy isn't active, needs relabeling again.
-		[ -e /etc/selinux/.relabelled ] && >> /etc/selinux/.autorelabel
+		if [ -e /etc/selinux/.relabelled ]; then >> /etc/selinux/.autorelabel; fi
 EOF
 		echo "transactional-update failed"
 		exit 1
