@@ -12,7 +12,8 @@ Requires=combustion-prepare.service
 After=combustion-prepare.service
 
 # Optionally make network available
-After=network.target
+Wants=network-online.target
+After=network-online.target
 
 # After ignition completed its stuff
 After=ignition-complete.target
