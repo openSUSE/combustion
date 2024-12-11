@@ -171,7 +171,7 @@ cleanup() {
 		fi
 	fi
 
-	if grep -w /sysroot /proc/*/mountinfo; then
+	if grep -w /sysroot /proc/*/mountinfo 2>/dev/null; then
 		echo "Warning: /sysroot still mounted somewhere"
 	fi
 
