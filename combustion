@@ -22,13 +22,7 @@ if [ "${1-}" = "--prepare" ]; then
 			# Set rd.neednet if not already done and reevaluate it (module-specific)
 			getargbool 0 'rd.neednet' && exit 0
 			echo rd.neednet=1 > /etc/cmdline.d/40-combustion-neednet.conf
-			if [ -e "${hookdir}/pre-udev/60-net-genrules.sh" ]; then
-				# Wicked
-				. "${hookdir}/pre-udev/60-net-genrules.sh"
-				# Re-trigger generation of network rules and apply them
-				udevadm control --reload
-				udevadm trigger --subsystem-match net --action add
-			elif [ -e "${hookdir}/cmdline/99-nm-config.sh" ]; then
+			if [ -e "${hookdir}/cmdline/99-nm-config.sh" ]; then
 				# NetworkManager
 				. "${hookdir}/cmdline/99-nm-config.sh"
 			else
