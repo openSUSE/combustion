@@ -55,7 +55,7 @@ if ! [ -n "${reuseinitrd}" ] || ! [ -e "${tmpdir}/vmlinuz" ] || ! [ -e "${tmpdir
 #!/bin/bash
 set -euxo pipefail
 exec &>/dev/ttyS0
-trap '[ $? -eq 0 ] || poweroff -f' EXIT
+trap '[ $? -eq 0 ] || SYSTEMD_IGNORE_CHROOT=1 poweroff -f' EXIT
 mount -t 9p -o trans=virtio tmpdir /mnt
 # Install new combustion, make sure the old remnants are gone
 rpm -e --nodeps --noscripts combustion
