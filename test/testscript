@@ -3,7 +3,7 @@
 set -euxo pipefail
 exec &>/dev/ttyS0
 # Poweroff immediately on any failure to avoid unnecessary waiting.
-trap '[ $? -eq 0 ] || poweroff -f' EXIT
+trap '[ $? -eq 0 ] || SYSTEMD_IGNORE_CHROOT=1 poweroff -f' EXIT
 
 if [ "${1-}" = "--prepare" ]; then
 	# Verify that the udev rules work for all config sources and avoid
