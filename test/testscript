@@ -30,7 +30,7 @@ trap '[ $? -eq 0 ] || poweroff -f' EXIT
 if journalctl --no-pager | grep "/sysroot still mounted somewhere"; then
     exit 1
 fi
-mount -t 9p -o trans=virtio tmpdir /mnt
+mount -t virtiofs tmpdir /mnt
 touch /mnt/done
 umount /mnt
 poweroff -f
