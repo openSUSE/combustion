@@ -24,4 +24,5 @@ Conflicts=dracut-emergency.service emergency.service emergency.target
 
 [Service]
 Type=oneshot
+StandardOutput=journal+console
 ExecStart=/usr/bin/combustion --prepare
