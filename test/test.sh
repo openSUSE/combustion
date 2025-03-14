@@ -40,6 +40,14 @@ make -C "${testdir}/.." install "DESTDIR=${tmpdir}/install"
 cp "${testdir}/"{testscript,config.ign} "${tmpdir}"
 cd "$tmpdir"
 
+cat >combustion-secondboot <<'EOF'
+#!/bin/bash
+set -euxo pipefail
+exec &>/dev/ttyS0
+echo "Combustion must not run on second boot"
+SYSTEMD_IGNORE_CHROOT=1 poweroff -f
+EOF
+
 # Download latest MicroOS image
 if ! [ -f openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 ]; then
 	wget --progress=bar:force:noscroll https://download.opensuse.org/tumbleweed/appliances/openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
@@ -108,6 +116,18 @@ if ! [ -e "${tmpdir}/done" ]; then
 	exit 1
 fi
 
+# Make sure it does not run on the second boot
+rm -f "${tmpdir}/done"
+
+timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
+        -kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0" \
+        -fw_cfg name=opt/org.opensuse.combustion/script,file=combustion-secondboot
+
+if ! [ -e "${tmpdir}/done" ]; then
+        echo "Test failed"
+        exit 1
+fi
+
 # Test combustion.url using QEMU's builtin tftp server
 rm -f "${tmpdir}/done"
 qemu-img snapshot -a initial openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
@@ -172,3 +192,16 @@ if ! [ -e "${tmpdir}/done" ]; then
 	echo "Test failed"
 	exit 1
 fi
+
+# Make sure it does not run on the second boot
+rm -f "${tmpdir}/done"
+
+timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2 \
+	-kernel vmlinuz-minimal -initrd initrd-minimal -append "root=LABEL=ROOT rw console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0 combustion.url=tftp://10.0.2.2/combustion-secondboot" \
+	-nic "user,tftp=$tmpdir"
+
+if ! [ -e "${tmpdir}/done" ]; then
+        echo "Test failed"
+        exit 1
+fi
+
