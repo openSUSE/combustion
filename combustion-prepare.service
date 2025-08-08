@@ -12,12 +12,8 @@ After=dev-combustion-config.device
 After=ignition-setup-user.service
 
 # This may enable network services in the same way, so make sure the prepare
-# script could write configiguration before networking is enabled.
+# script could write configiuration before networking is enabled.
 Before=ignition-enable-network.service
-
-# This reconfigures networking, which runs during the initqueue (wicked)
-# or has its own service (NM)
-Before=dracut-initqueue.service nm-initrd.service
 
 Conflicts=initrd-switch-root.target umount.target
 Conflicts=dracut-emergency.service emergency.service emergency.target

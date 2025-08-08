@@ -25,6 +25,8 @@ if [ "${1-}" = "--prepare" ]; then
 			if [ -e "${hookdir}/cmdline/99-nm-config.sh" ]; then
 				# NetworkManager
 				. "${hookdir}/cmdline/99-nm-config.sh"
+				# Start the newly enabled services
+				systemctl start --now --no-block --job-mode=fail initrd.target
 			else
 				echo "ERROR: unknown network framework" >&2
 				exit 1
