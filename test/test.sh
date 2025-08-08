@@ -70,6 +70,7 @@ rpm -e --nodeps --noscripts combustion
 cp -av /mnt/install/usr /
 cp /usr/lib/modules/$(uname -r)/vmlinuz /mnt/vmlinuz
 dracut -f --no-hostonly /mnt/initrd
+dracut -f --no-hostonly --omit "ignition" /mnt/initrd-noignition
 touch /mnt/done
 umount /mnt
 SYSTEMD_IGNORE_CHROOT=1 poweroff -f
@@ -134,6 +135,19 @@ qemu-img snapshot -a initial openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
 	-kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0 combustion.url=tftp://10.0.2.2/testscript" \
+	-nic "user,tftp=$tmpdir"
+
+if ! [ -e "${tmpdir}/done" ]; then
+	echo "Test failed"
+	exit 1
+fi
+
+# Test combustion.url using QEMU's builtin tftp server without ignition
+rm -f "${tmpdir}/done"
+qemu-img snapshot -a initial openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
+
+timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
+	-kernel vmlinuz -initrd initrd-noignition -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0 combustion.url=tftp://10.0.2.2/testscript" \
 	-nic "user,tftp=$tmpdir"
 
 if ! [ -e "${tmpdir}/done" ]; then
