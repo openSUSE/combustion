@@ -260,6 +260,12 @@ chroot /sysroot mount -a || true
 findmnt /sysroot/run >/dev/null || mount -t tmpfs tmpfs /sysroot/run
 findmnt /sysroot/tmp >/dev/null || mount -t tmpfs tmpfs /sysroot/tmp
 
+# The /etc bind mount in the nested subvolume setup is read-only at first,
+# make it read-write.
+if ! [ -w /sysroot/etc ]; then
+	mount -o remount,rw /sysroot/etc
+fi
+
 # Fake a netconfig setup
 if [ -r /etc/resolv.conf ]; then
 	mkdir -p /sysroot/run/netconfig/
