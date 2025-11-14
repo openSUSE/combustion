@@ -17,7 +17,7 @@ Before=sysroot.mount
 
 # Combustion/ignition may configure networking, which runs during
 # the initqueue (wicked) or has its own service (NM)
-Before=dracut-initqueue.service nm-initrd.service
+Before=dracut-initqueue.service nm-initrd.service NetworkManager-initrd.service
 
 # Make sure this is stopped before switch root or emergency:
 # https://github.com/systemd/systemd/issues/3436
