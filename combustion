@@ -31,6 +31,9 @@ if [ "${1-}" = "--prepare" ]; then
 			elif [ -e "${hookdir}/cmdline/99-nm-config.sh" ]; then
 				# NetworkManager
 				. "${hookdir}/cmdline/99-nm-config.sh"
+				if [ -e /usr/lib/systemd/system/NetworkManager-config-initrd.service ]; then
+					systemctl restart NetworkManager-config-initrd.service
+				fi
 			else
 				echo "ERROR: unknown network framework" >&2
 				exit 1
