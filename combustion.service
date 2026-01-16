@@ -12,7 +12,10 @@ Requires=combustion-prepare.service
 After=combustion-prepare.service
 
 # Optionally make network available
-After=network.target
+After=network-online.target
+# This can be pulled in unconditionally:
+# The services provided by NM have a condition on neednet.
+Wants=network-online.target
 
 # After ignition completed its stuff
 After=ignition-complete.target
