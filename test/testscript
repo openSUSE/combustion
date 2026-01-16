@@ -17,7 +17,7 @@ if [ "${1-}" = "--prepare" ]; then
 fi
 
 echo root:linux | chpasswd
-curl example.com
+curl icanhazip.com
 echo "Configured with combustion" > /etc/issue.d/combustion
 
 # Make sure that the system comes up good, leave a marker in the shared FS
