@@ -263,10 +263,16 @@ chroot /sysroot mount -a || true
 findmnt /sysroot/run >/dev/null || mount -t tmpfs tmpfs /sysroot/run
 findmnt /sysroot/tmp >/dev/null || mount -t tmpfs tmpfs /sysroot/tmp
 
-# The /etc bind mount in the nested subvolume setup is read-only at first,
-# make it read-write.
+# Need to write to /sysroot/etc for possibly creating resolv.conf
+# and touching /etc/selinux/.autorelabel.
 if ! [ -w /sysroot/etc ]; then
-	mount -o remount,rw /sysroot/etc
+	# Transactional systems have a separate mount for /etc.
+	# In the nested subvolume setup there's a bind mount that is read-only at first.
+	if findmnt /sysroot/etc >/dev/null; then
+		mount -o remount,rw /sysroot/etc
+	else
+		mount -o remount,rw /sysroot
+	fi
 fi
 
 # Fake a netconfig setup
@@ -319,7 +325,6 @@ EOF
 		systemctl daemon-reload # Unfortunately required for this :-/
 	fi
 else
-	mount -o remount,rw /sysroot
 	if ! chroot /sysroot sh -e -c "cd '${config_dir}'; ./script"; then
 		echo "Command failed"
 		exit 1
