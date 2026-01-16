@@ -15,7 +15,7 @@ mount -o "$opts" "$what" /sysroot
 # Handle x-initrd.mount without initrd-parse-etc.service
 awk '$1 !~ /^#/ && $4 ~ /(\<|,)x-initrd\.mount(\>|,)/ && ! ( $2 == "/etc" && $3 == "none" ) { if(system("mount --target-prefix /sysroot --fstab /sysroot/etc/fstab " $2) != 0) exit 1; }' /sysroot/etc/fstab
 
-if ! [ -e /sysroot/etc/machine-id ] \
+if ! [ -e /sysroot/etc/machine-id ] || grep -qw uninitialized /sysroot/etc/machine-id \
 	|| grep -qw 'ignition\.firstboot' /proc/cmdline || grep -qw 'combustion\.firstboot' /proc/cmdline; then
 	echo "Firstboot detected"
 	if [ "$(uname -m)" = "s390x" ]; then
