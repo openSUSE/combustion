@@ -334,6 +334,7 @@ fi
 
 if [ "${complete}" -eq 1 ]; then
 	rm -f /sysroot/var/lib/YaST2/reconfig_system
+	echo '{}' > /sysroot/etc/.combustion-result.json
 fi
 
 exit 0
