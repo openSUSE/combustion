@@ -121,12 +121,12 @@ fi
 rm -f "${tmpdir}/done"
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
-        -kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0" \
-        -fw_cfg name=opt/org.opensuse.combustion/script,file=combustion-secondboot
+	-kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0" \
+	-fw_cfg name=opt/org.opensuse.combustion/script,file=combustion-secondboot
 
 if ! [ -e "${tmpdir}/done" ]; then
-        echo "Test failed"
-        exit 1
+	echo "Test failed"
+	exit 1
 fi
 
 # Test combustion.url using QEMU's builtin tftp server
@@ -159,10 +159,10 @@ fi
 
 # Download latest Minimal-VM image
 if ! [ -f openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2 ]; then
-        wget --progress=bar:force:noscroll https://download.opensuse.org/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2
-        qemu-img snapshot -c initial openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2
+	wget --progress=bar:force:noscroll https://download.opensuse.org/tumbleweed/appliances/openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2
+	qemu-img snapshot -c initial openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2
 else
-        qemu-img snapshot -a initial openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2
+	qemu-img snapshot -a initial openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2
 fi
 
 # Use combustion in the downloaded image to generate an initrd with the new combustion.
@@ -215,7 +215,7 @@ timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openS
 	-nic "user,tftp=$tmpdir"
 
 if ! [ -e "${tmpdir}/done" ]; then
-        echo "Test failed"
-        exit 1
+	echo "Test failed"
+	exit 1
 fi
 
