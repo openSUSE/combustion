@@ -30,6 +30,9 @@ trap '[ $? -eq 0 ] || poweroff -f' EXIT
 if journalctl --no-pager | grep "/sysroot still mounted somewhere"; then
     exit 1
 fi
+if [ -w / ]; then
+	snapper --csvout list --disable-used-space | grep "After combustion configuration"
+fi
 mount -t 9p -o trans=virtio tmpdir /mnt
 touch /mnt/done
 umount /mnt
