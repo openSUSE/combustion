@@ -37,6 +37,8 @@ QEMU_BASEARGS=(
 KERNEL_BASEARGS=(
 	root=LABEL=ROOT
 	console=ttyS0
+	# In TW, SELinux needs to be enabled explicitly
+	security=selinux selinux=1
 	# Configure output and logging logging
 	quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1
 	# Make sure to fail fast
