@@ -34,6 +34,14 @@ QEMU_BASEARGS=(
 	-chardev null,id=serial,logfile=/dev/stdout,logappend=on -serial chardev:serial -monitor none
 	-virtfs "local,path=${tmpdir},mount_tag=tmpdir,security_model=none")
 
+KERNEL_BASEARGS=(
+	root=LABEL=ROOT
+	console=ttyS0
+	# Configure output and logging logging
+	quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1
+	# Make sure to fail fast
+	rd.emergency=poweroff rd.shell=0)
+
 # Prepare the temporary dir: Install combustion and copy resources.
 testdir="$(dirname "$0")"
 make -C "${testdir}/.." install "DESTDIR=${tmpdir}/install"
@@ -96,7 +104,7 @@ cp config.ign configdrv/ignition/config.ign
 /sbin/mkfs.ext4 -F -d configdrv -L ignition combustion.raw 16M
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
-	-kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0" \
+	-kernel vmlinuz -initrd initrd -append "${KERNEL_BASEARGS[*]}" \
 	-drive if=virtio,file=combustion.raw
 
 if ! [ -e "${tmpdir}/done" ]; then
@@ -109,7 +117,7 @@ rm -f "${tmpdir}/done"
 qemu-img snapshot -a initial openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
-	-kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0" \
+	-kernel vmlinuz -initrd initrd -append "${KERNEL_BASEARGS[*]}" \
 	-fw_cfg name=opt/org.opensuse.combustion/script,file=testscript
 
 if ! [ -e "${tmpdir}/done" ]; then
@@ -121,7 +129,7 @@ fi
 rm -f "${tmpdir}/done"
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
-	-kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0" \
+	-kernel vmlinuz -initrd initrd -append "${KERNEL_BASEARGS[*]}" \
 	-fw_cfg name=opt/org.opensuse.combustion/script,file=combustion-secondboot
 
 if ! [ -e "${tmpdir}/done" ]; then
@@ -134,7 +142,7 @@ rm -f "${tmpdir}/done"
 qemu-img snapshot -a initial openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
-	-kernel vmlinuz -initrd initrd -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0 combustion.url=tftp://10.0.2.2/testscript" \
+	-kernel vmlinuz -initrd initrd -append "${KERNEL_BASEARGS[*]} combustion.url=tftp://10.0.2.2/testscript" \
 	-nic "user,tftp=$tmpdir"
 
 if ! [ -e "${tmpdir}/done" ]; then
@@ -147,7 +155,7 @@ rm -f "${tmpdir}/done"
 qemu-img snapshot -a initial openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-MicroOS.x86_64-kvm-and-xen.qcow2 \
-	-kernel vmlinuz -initrd initrd-noignition -append "root=LABEL=ROOT console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0 combustion.url=tftp://10.0.2.2/testscript" \
+	-kernel vmlinuz -initrd initrd-noignition -append "${KERNEL_BASEARGS[*]} combustion.url=tftp://10.0.2.2/testscript" \
 	-nic "user,tftp=$tmpdir"
 
 if ! [ -e "${tmpdir}/done" ]; then
@@ -199,7 +207,7 @@ rm -f "${tmpdir}/done"
 qemu-img snapshot -a initial openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2 \
-	-kernel vmlinuz-minimal -initrd initrd-minimal -append "root=LABEL=ROOT rw console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0 combustion.url=tftp://10.0.2.2/testscript" \
+	-kernel vmlinuz-minimal -initrd initrd-minimal -append "${KERNEL_BASEARGS[*]} rw combustion.url=tftp://10.0.2.2/testscript" \
 	-nic "user,tftp=$tmpdir"
 
 if ! [ -e "${tmpdir}/done" ]; then
@@ -211,7 +219,7 @@ fi
 rm -f "${tmpdir}/done"
 
 timeout 300 qemu-system-x86_64 "${QEMU_BASEARGS[@]}" -drive if=virtio,file=openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2 \
-	-kernel vmlinuz-minimal -initrd initrd-minimal -append "root=LABEL=ROOT rw console=ttyS0 quiet systemd.show_status=1 systemd.log_target=console systemd.journald.forward_to_console=1 rd.emergency=poweroff rd.shell=0 combustion.url=tftp://10.0.2.2/combustion-secondboot" \
+	-kernel vmlinuz-minimal -initrd initrd-minimal -append "${KERNEL_BASEARGS[*]} rw combustion.url=tftp://10.0.2.2/combustion-secondboot" \
 	-nic "user,tftp=$tmpdir"
 
 if ! [ -e "${tmpdir}/done" ]; then
